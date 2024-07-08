@@ -239,12 +239,6 @@ async function typingEffect(
 }
 
 async function main() {
-	const exampleText = "Hello, World!";
-	const brailleText = KeyLoadingAsBraille(exampleText);
-	console.log(chalk.grey(brailleText));
-
-	// Animated typing effect
-
 	const text = "Hello, this is a typing effect demo!";
 	const baseDelay = 10; // Base delay in milliseconds
 	const jitter = 0.6; // Jitter factor
@@ -253,6 +247,10 @@ async function main() {
 
 	await typingEffect(text, baseDelay, jitter, keyboardInfluence, delayPerKeyDistance);
 	console.log(); // Move to the next line after typing effect is done
+
+	// Checking the text as braille
+	const brailleText = KeyLoadingAsBraille(text);
+	console.log(chalk.grey(brailleText));
 }
 
 if (import.meta.main) {
