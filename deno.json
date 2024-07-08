@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "dev": "deno run --watch src/main.ts"
+    "dev": "deno run --watch --allow-env --allow-read src/main.ts"
   },
   "fmt": {
     "useTabs": true,
