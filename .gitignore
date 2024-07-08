@@ -60,6 +60,11 @@ temp
 .DS_Store
 Thumbs.db
 
+### ---------------- General Deno
+*.orig
+*.pyc
+*.swp
+
 ### ---------------- General Node.js
 node_modules
 
