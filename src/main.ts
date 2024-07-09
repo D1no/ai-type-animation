@@ -59,6 +59,8 @@ async function typingEffectWithBrailleLoading(
 	brailleAhead: number = 10,
 	minBrailleAhead: number = 6,
 	overshoot: number = 5,
+	minContractionDelay: number = 20, // Min Delay for the contraction phase
+	maxContractionDelay: number = 60, // Max Delay for the contraction phase
 ): Promise<void> {
 	hideCursor();
 
@@ -68,6 +70,9 @@ async function typingEffectWithBrailleLoading(
 	const terminalWidth = Deno.consoleSize().columns;
 
 	for (let i = 0; i < text.length + overshoot; i++) {
+		const contractionDelay = Math.floor(Math.random() * (maxContractionDelay - minContractionDelay + 1)) +
+			minContractionDelay;
+
 		if (i < text.length) {
 			// Calculate the number of Braille characters ahead
 			const ahead = Math.floor(Math.random() * (brailleAhead - minBrailleAhead + 1)) + minBrailleAhead;
@@ -86,7 +91,17 @@ async function typingEffectWithBrailleLoading(
 			const char = text[i];
 			displayText[i] = char;
 		} else {
-			// Contract the overshoot characters
+			// Randomize the fade intensity for remaining overshot Braille characters
+			for (let k = text.length; k < text.length + overshoot - (i - text.length); k++) {
+				displayText[k] = fadeChar(getRandomBrailleCharacter(), Math.random());
+			}
+
+			// Print the updated display text
+			const output = `\r${displayText.join("")}`;
+			Deno.stdout.writeSync(new TextEncoder().encode(output));
+			await new Promise((resolve) => setTimeout(resolve, contractionDelay));
+
+			// Contract the overshoot characters one by one
 			displayText[text.length + overshoot - (i - text.length) - 1] = " ";
 		}
 
@@ -101,7 +116,7 @@ async function typingEffectWithBrailleLoading(
 			previousChar = text[i];
 			await new Promise((resolve) => setTimeout(resolve, delay));
 		} else {
-			await new Promise((resolve) => setTimeout(resolve, baseDelay));
+			await new Promise((resolve) => setTimeout(resolve, contractionDelay));
 		}
 	}
 
@@ -118,7 +133,9 @@ async function main() {
 	const delayPerKeyDistance = 20; // Delay per key distance in milliseconds
 	const brailleAhead = 16; // Maximum number of Braille characters ahead
 	const minBrailleAhead = 2; // Minimum number of Braille characters ahead
-	const overshoot = 20; // Number of Braille characters to overshoot
+	const overshoot = 7; // Number of Braille characters to overshoot
+	const minContractionDelay = 20; // Delay for the contraction phase in milliseconds
+	const maxContractionDelay = 120; // Delay for the contraction phase in milliseconds
 
 	await typingEffectWithBrailleLoading(
 		text,
@@ -129,6 +146,8 @@ async function main() {
 		brailleAhead,
 		minBrailleAhead,
 		overshoot,
+		minContractionDelay,
+		maxContractionDelay,
 	);
 }
 
