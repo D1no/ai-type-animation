@@ -322,8 +322,8 @@ async function typingEffectWithBrailleLoading(
 
 async function main() {
 	const text =
-		"Hello, this is a typing effect demo with a long text that should be resilient to line breaks and ensure that the animation works correctly."
-			.repeat(7);
+		"Hello, this is a typing effect demo with a long text that should be resilient to line breaks and ensure that the animation works correctly. "
+			.repeat(5).trim();
 
 	const config: TypingEffectConfig = {
 		baseDelay: 10, // Base delay in milliseconds
@@ -332,7 +332,7 @@ async function main() {
 		keyDelay: 30, // Delay per key distance in milliseconds
 		brailleAhead: 16, // Maximum number of Braille characters ahead
 		minBrailleAhead: 1, // Minimum number of Braille characters ahead
-		overshoot: 30, // Number of Braille characters to overshoot
+		overshoot: 7, // Number of Braille characters to overshoot
 		minContractionDelay: 1, // Min Delay for the contraction phase in milliseconds
 		maxContractionDelay: 20, // Max Delay for the contraction phase in milliseconds
 		minAccelerationMultiplier: 0.1, // Min Acceleration multiplier over text length
