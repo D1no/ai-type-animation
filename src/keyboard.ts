@@ -201,6 +201,14 @@ export const similarBrailleMap: { [key: string]: string } = {
 };
 
 /**
+ * Returns random braille character.
+ */
+export function getRandomBrailleCharacter(): string {
+	const brailleChars = Object.values(similarBrailleMap);
+	return brailleChars[Math.floor(Math.random() * brailleChars.length)];
+}
+
+/**
  * Converts the given text to Braille characters.
  */
 export function KeyLoadingAsBraille(text: string): string {

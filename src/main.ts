@@ -1,5 +1,5 @@
 import chalk from "npm:chalk@5.3.0";
-import { keyboardLayout, similarBrailleMap } from "./keyboard.ts";
+import { getRandomBrailleCharacter, keyboardLayout, similarBrailleMap } from "./keyboard.ts";
 
 /**
  * Returns the Euclidean distance between two keys on the keyboard.
@@ -36,6 +36,20 @@ function fadeChar(text: string, intensity: number, minRange: number = 0, maxRang
 	return chalk.rgb(rgbValue, rgbValue, rgbValue)(text);
 }
 
+/**
+ * Hides the terminal cursor.
+ */
+function hideCursor(): void {
+	Deno.stdout.writeSync(new TextEncoder().encode("\x1b[?25l"));
+}
+
+/**
+ * Shows the terminal cursor.
+ */
+function showCursor(): void {
+	Deno.stdout.writeSync(new TextEncoder().encode("\x1b[?25h"));
+}
+
 async function typingEffectWithBrailleLoading(
 	text: string,
 	baseDelay: number,
@@ -46,9 +60,12 @@ async function typingEffectWithBrailleLoading(
 	minBrailleAhead: number = 6,
 	overshoot: number = 5,
 ): Promise<void> {
+	hideCursor();
+
 	let previousChar = "";
 	const brailleText = text.split("").map((char) => similarBrailleMap[char] || char);
 	const displayText = Array(text.length + overshoot).fill(" ");
+	const terminalWidth = Deno.consoleSize().columns;
 
 	for (let i = 0; i < text.length + overshoot; i++) {
 		if (i < text.length) {
@@ -61,7 +78,7 @@ async function typingEffectWithBrailleLoading(
 					displayText[j] = fadeChar(brailleText[j], Math.random());
 				} else {
 					// Overshoot Braille characters beyond the text length
-					displayText[j] = fadeChar("⠿", Math.random());
+					displayText[j] = fadeChar(getRandomBrailleCharacter(), Math.random());
 				}
 			}
 
@@ -70,7 +87,7 @@ async function typingEffectWithBrailleLoading(
 			displayText[i] = char;
 		} else {
 			// Contract the overshoot characters
-			displayText.pop();
+			displayText[text.length + overshoot - (i - text.length) - 1] = " ";
 		}
 
 		// Print the display text
@@ -88,19 +105,20 @@ async function typingEffectWithBrailleLoading(
 		}
 	}
 
-	// Print the final text to ensure the last character is displayed correctly
-	Deno.stdout.writeSync(new TextEncoder().encode(`\r${text}\n`));
+	// Ensure the cursor is moved to the right edge and print the final text to ensure the last character is displayed correctly
+	Deno.stdout.writeSync(new TextEncoder().encode(`\r${text.padEnd(terminalWidth)}\n`));
+	showCursor();
 }
 
 async function main() {
 	const text = "Hello, this is a typing effect demo!";
-	const baseDelay = 100; // Base delay in milliseconds
+	const baseDelay = 20; // Base delay in milliseconds
 	const jitter = 0.6; // Jitter factor
 	const keyboardInfluence = 0.8; // How much the keyboard layout influences the typing speed
-	const delayPerKeyDistance = 30; // Delay per key distance in milliseconds
-	const brailleAhead = 10; // Maximum number of Braille characters ahead
-	const minBrailleAhead = 6; // Minimum number of Braille characters ahead
-	const overshoot = 5; // Number of Braille characters to overshoot
+	const delayPerKeyDistance = 20; // Delay per key distance in milliseconds
+	const brailleAhead = 16; // Maximum number of Braille characters ahead
+	const minBrailleAhead = 2; // Minimum number of Braille characters ahead
+	const overshoot = 20; // Number of Braille characters to overshoot
 
 	await typingEffectWithBrailleLoading(
 		text,
