@@ -219,38 +219,77 @@ function getRandomDelay(baseDelay: number, jitter: number = 0.6): number {
 	return baseDelay + Math.random() * variance - variance / 2;
 }
 
-async function typingEffect(
+/**
+ * Fades the text to white based on the intensity.
+ */
+function fadeChar(text: string, inensity: number, minRange: number = 0, maxRange: number = 255): string {
+	const from = minRange;
+	const to = maxRange;
+
+	const rgbValue = Math.floor(from + (to - from) * inensity);
+
+	return chalk.rgb(rgbValue, rgbValue, rgbValue)(text);
+}
+
+async function typingEffectWithBrailleLoading(
 	text: string,
 	baseDelay: number,
 	jitter: number = 0.6,
 	keyboardInfluence: number = 1,
 	keyDelay: number = 10,
+	brailleAhead: number = 10,
+	minBrailleAhead: number = 6,
 ): Promise<void> {
 	let previousChar = "";
-	for (const char of text) {
-		Deno.stdout.writeSync(new TextEncoder().encode(char));
+	let brailleText = text.split("").map((char) => similarBrailleMap[char] || char);
+	let displayText = Array(text.length).fill(" ");
+
+	for (let i = 0; i < text.length; i++) {
+		// Calculate the number of Braille characters ahead
+		let ahead = Math.floor(Math.random() * (brailleAhead - minBrailleAhead + 1)) + minBrailleAhead;
+
+		// Update the display text with Braille characters ahead with random fading
+		for (let j = i + 1; j <= i + ahead && j < text.length; j++) {
+			displayText[j] = fadeChar(brailleText[j], Math.random());
+		}
+
+		// Typing effect for the current character
+		const char = text[i];
+		displayText[i] = char;
+
+		// Print the display text
+		const output = `\r${displayText.join("")}`;
+		Deno.stdout.writeSync(new TextEncoder().encode(output));
+
 		const distance = previousChar ? getKeyDistance(previousChar, char) : 1;
 		const keyDistanceDelay = normalizeKeyDistanceDelay(distance, keyDelay) * keyboardInfluence;
-
 		const delay = getRandomDelay(baseDelay + keyDistanceDelay, jitter);
 		previousChar = char;
 		await new Promise((resolve) => setTimeout(resolve, delay));
 	}
+
+	// Print the final text to ensure the last character is displayed correctly
+	Deno.stdout.writeSync(new TextEncoder().encode(`\r${text}\n`));
 }
 
 async function main() {
 	const text = "Hello, this is a typing effect demo!";
-	const baseDelay = 10; // Base delay in milliseconds
+	const baseDelay = 100; // Base delay in milliseconds
 	const jitter = 0.6; // Jitter factor
 	const keyboardInfluence = 0.8; // How much the keyboard layout influences the typing speed
 	const delayPerKeyDistance = 30; // Delay per key distance in milliseconds
+	const brailleAhead = 10; // Maximum number of Braille characters ahead
+	const minBrailleAhead = 6; // Minimum number of Braille characters ahead
 
-	await typingEffect(text, baseDelay, jitter, keyboardInfluence, delayPerKeyDistance);
-	console.log(); // Move to the next line after typing effect is done
-
-	// Checking the text as braille
-	const brailleText = KeyLoadingAsBraille(text);
-	console.log(chalk.grey(brailleText));
+	await typingEffectWithBrailleLoading(
+		text,
+		baseDelay,
+		jitter,
+		keyboardInfluence,
+		delayPerKeyDistance,
+		brailleAhead,
+		minBrailleAhead,
+	);
 }
 
 if (import.meta.main) {
