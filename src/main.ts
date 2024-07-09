@@ -272,9 +272,17 @@ async function typingLineEffectWithBrailleLoading(
 async function typingEffectWithBrailleLoading(
 	text: string,
 	config: TypingEffectConfig,
+	/**
+	 * Clear the console on run to see only the animation.
+	 */
+	clearConsole: boolean = false,
 ): Promise<void> {
 	// Hide the terminal cursor during the animation
 	hideCursor();
+
+	if (clearConsole) {
+		console.clear();
+	}
 
 	// Get the terminal width to ensure the text fits within the terminal boundaries
 	const terminalWidth = Deno.consoleSize().columns;
@@ -339,7 +347,7 @@ async function main() {
 		maxAccelerationMultiplier: 6, // Max Acceleration multiplier over text length
 	};
 
-	await typingEffectWithBrailleLoading(text, config);
+	await typingEffectWithBrailleLoading(text, config, true);
 }
 
 if (import.meta.main) {
