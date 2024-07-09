@@ -8,3 +8,9 @@ Open in DevContainer or GitHub Codespaces and run the following command:
 ```bash
 deno task dev
 ```
+
+_or directly_
+
+```bash
+deno run --allow-env --allow-read src/main.ts
+```
